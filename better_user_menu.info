@@ -1,0 +1,17 @@
+name = Better User Menu
+description = Uses hook_menu() to add login / register links to user-menu
+package = User Interface
+core = 7.x
+
+configure = admin/config/user-interface/better_user_menu
+
+files[] = README.md
+files[] = better_user_menu.install
+files[] = better_user_menu.module
+files[] = better_user_menu.admin.inc
+
+; Information added by drupal.org packaging script on 2014-05-27
+version = "7.x-dev"
+core = "7.x"
+project = "better_user_menu"
+datestamp = "1401228130"

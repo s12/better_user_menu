@@ -1,0 +1,191 @@
+<?php
+/*
+ * hook_requirements()
+ * updates admin/reports/status
+ */
+function better_user_menu_requirements('runtime'){
+	$requirements = array();
+
+	$bum = 'better_user_menu_';
+	$vars = array(
+		'enabled' => variable_get($bum.'enabled', TRUE),
+
+		'login_shown' => variable_get($bum.'login_shown', TRUE),
+		'login_text' => variable_get($bum.'login_text', 'Log in'),
+		'login_title' => variable_get($bum.'login_title', 'Click here to login in.'),
+
+		'reg_shown' => variable_get($bum.'reg_shown', TRUE),
+		'reg_text' => variable_get($bum.'reg_text', 'Sign up'),
+		'reg_title' => variable_get($bum.'reg_title', 'Click here to sign up.'),
+	);
+
+	if(!$vars['enabled']){
+	  $bum_msg =  'installed but not enabled. config [ @status ] Please enable: !config';
+
+    $bum_sev = REQUIREMENT_WARNING;
+
+    $bum_stat = 'DISABLED';
+	} else {
+		$bum_msg = 'installed and enabled. config [ @status ]';
+
+		$bum_sev = REQUIREMENT_OK;
+
+		$bum_stat = 'OK';
+
+		if(!$vars['login_shown']){
+			$bum_msg.= ' @login menu item will not be added to the User menu.';
+
+			$bum_sev = REQUIREMENT_INFO;
+		}
+
+		if(!$vars['login_title']){
+			$bum_msg.= ' @login menu item will not have a title attribute.';
+
+			$bum_sev = REQUIREMENT_INFO;
+
+			$bum_stat = 'WARNING';
+		}
+
+		if(!$vars['reg_shown']){
+			$bum_msg.= ' @register menu item will not be added to the User menu.';
+
+			$bum_sev = REQUIREMENT_INFO;
+		}
+
+		if(!$vars['reg_title']){
+			$bum_msg.= ' @register menu item will not have a title attribute.';
+
+			$bum_sev = REQUIREMENT_INFO;
+
+			$bum_stat = 'WARNING';
+		}
+	}
+
+	$bum_rep = array( //t() replacements
+		'@status' => $bum_stat;
+		'@login' => $vars['login_text'],
+		'@register' => $vars['reg_text'],
+		'!config' => l('Better User Menu', 'admin/config/user-interface/better_user_menu'),
+	);
+
+	$requirements[$bum.'config'] = array(
+		'title' = t("Better User Menu"),
+		'description' = t($bum_msg,$bum_rep),
+		'severity' = $bum_sev,
+	);
+
+	return $requirements;
+}
+
+/*
+ * hook_help()
+ */
+function better_user_menu_help($path,$arg){
+	$bum_uri_projects='http://drupal.org/project/';
+	switch($path){
+		case "admin/help#better_user_menu":
+			return '<p>'.t('Alters `user-menu` to include @login/@register menu items. Allows administrative control over each menu item link text, title attribute and menu item visibility, outside the "admin/structure/menus/user-menu/list-links/user/[login|register]/edit" page for @login and @register menu items.',array(
+				'@login' => variable_get('better_user_menu_login_text','Log in'),
+				'@register' => variable_get('better_user_menu_reg_text','Sign up'),
+			)).'</p>
+			<p><em>'.t('Does not give control over menu item weight, parent nesting, expansion or contributed module menu item settings or fields.').'</em></p>
+			<h3>'.t('Recommended Menu Modules:').'</h3>
+			<p>'.t('!icon_menu, !menu_attributes, !special_menu_items, !menu_editor, !menu_token',array(
+				'!icon_menu' => l('Icon Menu',$bum_uri_projects.'icon'),
+				'!menu_attributes' => l('Menu Attributes',$bum_uri_projects.'menu_attributes'),
+				'!special_menu_items' => l('Special Menu Items',$bum_uri_projects.'special_menu_items'),
+				'!menu_editor' => l('Menu Editor',$bum_uri_projects.'menu_editor'),
+			)).'</p>';
+		break;
+	}
+}
+
+/*
+ * hook_menu()
+ */
+function better_user_menu_menu(){
+	$bum_enabled = variable_get('better_user_menu_enabled',TRUE);
+
+	$bum_login_shown = variable_get('better_user_menu_login_shown',TRUE);
+	$bum_login_text = variable_get('better_user_menu_login_text','Log in');
+	$bum_descripiton_login = variable_get('better_user_menu_login_title','Click here to log in');
+
+	$bum_reg_shown = variable_get('better_user_menu_reg_shown',TRUE);
+	$bum_reg_text = variable_get('better_user_menu_reg_text','Sign up');
+	$bum_descripiton_register = variable_get('better_user_menu_reg_title','Click here to sign up');
+
+	$items = array();
+
+	/**
+	 * @variable checks if($bum_enabled && $bum_shown_[...])
+	 * we add a layer of checks,
+	 * to make sure we're allowed
+	 * to make alterations...
+	 *
+	 * more modules should adopt this approach eh-hem "wysiwyg_filter"
+	 **/
+
+	if($bum_enabled && $bum_login_shown){
+		$items['user/login'] = array(
+			'title' => $bum_login_text,
+			'description' => $bum_descripiton_login,
+			'access_callback' => 'better_user_menu_login_access_callback',
+			'menu_name' => 'user-menu',
+			'type' => MENU_NORMAL_ITEM,
+		);
+	}
+
+	if($bum_enabled && $bum_reg_shown){
+	  $items['user/register'] = array(
+	    'title' => $bum_reg_text,
+	    'description' => $bum_descripiton_register,
+	    'page callback' => 'drupal_get_form',
+	    'page arguments' => array('user_reg_form'),
+	    'access callback' => 'better_user_menu_reg_access_callback',
+			'menu_name' => 'user-menu',
+	    'type' => MENU_NORMAL_ITEM,
+	  );
+  }
+
+  $items['admin/config/user-interface/better_user_menu']=array(
+  		'title' => 'Better User Menu',
+  		'description' => 'Administer Better User Menu',
+  		'page callback' => 'drupal_get_form',
+  		'page arguments' => array('better_user_menu_settings'),
+  		'access_callback' => array('administer better_user_menu'),
+  		'file' => 'better_user_menu.admin.inc',
+  		'weight' => -10,
+  );
+
+  return $items;
+}
+
+/*
+ * hook_permission()
+ * allow super user to grant
+ * `administer better_user_menu` permission
+ * to trusted roles
+ */
+function better_user_menu_permission(){
+	return array(
+		'administer better_user_menu' => array(
+			'title' => 'Administer Better User Menu',
+			'description' => t('Better User Menu administration allows users to change the link text, link attribute title and visibility of login and register menu items. Warning: Give to
+trusted roles only; this permission has security implications.'),
+		),
+	);
+}
+
+/*
+ * menu access callback for user/login
+ */
+function better_user_menu_login_access_callback(){
+	return user_is_anonymous();
+}
+
+/*
+ * menu access callback for user/register
+ */
+function better_user_menu_reg_access_callback(){
+	return user_reg_access();
+}

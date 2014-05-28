@@ -1,0 +1,51 @@
+<?php
+
+/*
+ * hook_install()
+ * Called on module install
+ */
+function better_user_menu_install(){
+	variable_set('better_user_menu_enabled',TRUE);
+
+	variable_set('better_user_menu_login_shown',TRUE);
+	variable_set('better_user_menu_login_text','Log in');
+	variable_set('better_user_menu_login_title','Click here to log in');
+
+	variable_set('better_user_menu_reg_shown',TRUE);
+	variable_set('better_user_menu_reg_text','Sign up');
+	variable_set('better_user_menu_reg_title','Click here to sign up');
+}
+
+/*
+ * hook_uninstall()
+ * Called on module uninstall
+ */
+function better_user_menu_uninstall(){
+	variable_del('better_user_menu_enabled');
+
+	variable_del('better_user_menu_login_shown');
+	variable_del('better_user_menu_login_text');
+	variable_del('better_user_menu_login_title');
+
+	variable_del('better_user_menu_reg_shown');
+	variable_del('better_user_menu_reg_text');
+	variable_del('better_user_menu_reg_title');
+}
+
+/*
+ * hook_enable()
+ * Called on module enable
+ * eg. module already installed then disabled
+ */
+function better_user_menu_enable(){
+	variable_set('better_user_menu_enabled',TRUE);
+}
+
+/*
+ * hook_install()
+ * Called on module disable
+ * eg. module disabled but not yet uninstalled
+ */
+function better_user_menu_disable(){
+	variable_set('better_user_menu_enabled',FALSE);
+}
