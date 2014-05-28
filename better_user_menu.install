@@ -1,51 +1,85 @@
 <?php
-
-/*
+/***
  * hook_install()
  * Called on module install
- */
-function better_user_menu_install(){
-	variable_set('better_user_menu_enabled',TRUE);
+/**/
+function better_user_menu_install(){	
+	foreach(better_user_menu_vars() as $name => $value){
+		variable_set($name,$value);
+	}
+	
+	drupal_flush_all_caches();
+}/**/
 
-	variable_set('better_user_menu_login_shown',TRUE);
-	variable_set('better_user_menu_login_text','Log in');
-	variable_set('better_user_menu_login_title','Click here to log in');
-
-	variable_set('better_user_menu_reg_shown',TRUE);
-	variable_set('better_user_menu_reg_text','Sign up');
-	variable_set('better_user_menu_reg_title','Click here to sign up');
-}
-
-/*
+/***
  * hook_uninstall()
  * Called on module uninstall
- */
+/**/
 function better_user_menu_uninstall(){
-	variable_del('better_user_menu_enabled');
+	
+	foreach(better_user_menu_var_names() as $name){
+		variable_del($name);
+	}
+	
+	drupal_flush_all_caches();
+}/**/
 
-	variable_del('better_user_menu_login_shown');
-	variable_del('better_user_menu_login_text');
-	variable_del('better_user_menu_login_title');
-
-	variable_del('better_user_menu_reg_shown');
-	variable_del('better_user_menu_reg_text');
-	variable_del('better_user_menu_reg_title');
-}
-
-/*
+/***
  * hook_enable()
  * Called on module enable
  * eg. module already installed then disabled
- */
+/**/
 function better_user_menu_enable(){
-	variable_set('better_user_menu_enabled',TRUE);
-}
+	drupal_flush_all_caches();
+}/**/
 
-/*
+/***
  * hook_install()
  * Called on module disable
  * eg. module disabled but not yet uninstalled
- */
+/**/
 function better_user_menu_disable(){
-	variable_set('better_user_menu_enabled',FALSE);
-}
+	drupal_flush_all_caches();
+}/**/
+
+/***
+ * _var_names()
+ * @return an array of var names.
+/**/
+function better_user_menu_var_names(){
+	$bum = 'better_user_menu_';
+	$vars = 'enabled,login_shown,login_text,login_title,reg_shown,reg_text,reg_title';
+	$names = array();
+	
+	foreach(explode(',', $vars) as $i => $name){
+		$names[$i] = $bum.$name;
+	}
+	
+	return $names;
+}/**/
+
+/***
+ * _vars()
+ * @return an array of vars by name.
+ *
+ * _enabled:				(BOOL)			Better User Menu module "soft-off"		:TRUE
+ *
+ * _login_shown:		(BOOL)			Add "Log in" link to User Menu	?			:TRUE
+ * _login_text:		(STRING)		"Log in" menu item link text					:"Log in"
+ * _login_title:		(STRING)		"Log in" menu item title attribute		:"Click here to log in."
+ *
+ * _reg_shown:			(BOOL)			Add "Sign up" link to User Menu?			:TRUE
+ * _reg_text:			(STRING)		"Sign up" menu item link text				:"Sign up"
+ * _reg_title:			(STRING)		"Sign up" menu item title attribute	:"Click here to Sign up."
+ *
+/**/
+function better_user_menu_vars(){
+	$vars = array();
+	$defaults = array(TRUE,TRUE,"Log in","Click here to log in.",TRUE,"Sign up","Click here to sign up.");
+	
+	foreach(better_user_menu_var_names() as $i => $name){ //@SEE _var_names() above.
+		$vars[$name] = variable_get($name,$defaults[$i]);
+	}
+	
+	return $vars;
+}/**///you don't get it do you?
